@@ -8,6 +8,7 @@
 package main
 
 import (
+	"io"
 	"log"
 	"net"
 	"os"
@@ -50,26 +51,8 @@ func handleConn(localConn net.Conn, remoteAddr string) {
 
 	log.Println("connect from", localConn.RemoteAddr().String(), "to", remoteAddr)
 
-	go copyConn(remoteConn, localConn)
-	copyConn(localConn, remoteConn)
+	go io.Copy(remoteConn, localConn)
+	io.Copy(localConn, remoteConn)
 
 	log.Println("disconnect from", localConn.RemoteAddr().String(), "to", remoteAddr)
-}
-
-func copyConn(from, to net.Conn) {
-	for {
-		var buffer [4096]byte
-		n, err := from.Read(buffer[0:])
-		if err != nil {
-			return
-		}
-
-		for i := 0; i < n; {
-			j, err := to.Write(buffer[i:n])
-			if err != nil {
-				return
-			}
-			i += j
-		}
-	}
 }
